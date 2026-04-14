@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCIO simulátor v4</title>
+  <link rel="stylesheet" href="styles_v4.css" />
+  <script src="data_metadata.js" defer></script>
+  <script src="data_metadata_hard.js" defer></script>
+  <script src="data_v4_questions.js" defer></script>
+  <script src="data_v4_questions_hard.js" defer></script>
+  <script src="analytics_v4.js" defer></script>
+  <script src="render_v4.js" defer></script>
+  <script src="app_core_v4.js" defer></script>
+  <script src="bootstrap_v4.js" defer></script>
+</head>
+<body>
+
+  <div class="top-wrap">
+    <div class="container">
+      <div class="brand">
+        <div class="logo-box" aria-hidden="true">
+          <div class="sq1"></div>
+          <div class="sq2"></div>
+          <div class="sq3"></div>
+        </div>
+        <h1>SCIO simulátor <span style="font-size:14px;color:var(--blue);vertical-align:super;">v4</span></h1>
+      </div>
+      <p class="sub">UPOL – SPP adaptivní simulátor a cílený trénink</p>
+    </div>
+  </div>
+
+  <div class="container page">
+    <!-- ════ START SCREEN ════ -->
+    <section class="panel start-screen" id="startScreen">
+      <div class="hero">
+        <div class="hero-card panel">
+          <h2>Vyber si baterii, obtížnost a spusť simulaci, trénink čtení zadání nebo cílenou opravnou sadu</h2>
+          <p>Simulátor obsahuje základní i pokročilou vrstvu. V každém režimu je 7 profilových baterií a 1 finální syntetická baterie. Každá pracuje s rámcem 50 otázek / 30 minut, ale zaměřuje se na jiný okruh, typ formulací a úroveň náročnosti.</p>
+          <div class="hero-note hero-note-rich">
+            <div class="hero-note-head">
+              <strong>Co od simulátoru čekat</strong>
+              <p>Nejde jen o počítání bodů. Simulátor tě vede od prvního průchodu bateriemi až k cílenému dopracování chyb, slabších témat a rozhodnutí, která tě v testu zbytečně stojí body.</p>
+            </div>
+            <div class="hero-note-list">
+              <div class="hero-note-item">
+                <span class="hero-note-icon" aria-hidden="true">🧩</span>
+                <div class="hero-note-copy">
+                  <strong>2 režimy · 8 baterií na režim · 800 otázek</strong>
+                  <span>Můžeš přepínat mezi základní a pokročilou vrstvou. Dashboard přitom dál sčítá výsledky napříč oběma režimy.</span>
+                </div>
+              </div>
+              <div class="hero-note-item">
+                <span class="hero-note-icon" aria-hidden="true">🎯</span>
+                <div class="hero-note-copy">
+                  <strong>Tři režimy práce</strong>
+                  <span>Můžeš jet ostrou simulaci, trénink čtení zadání nebo navazující opravnou sadu podle toho, co teď potřebuješ posílit.</span>
+                </div>
+              </div>
+              <div class="hero-note-item">
+                <span class="hero-note-icon" aria-hidden="true">🧭</span>
+                <div class="hero-note-copy">
+                  <strong>Studijní dashboard</strong>
+                  <span>Na hlavní stránce uvidíš dlouhodobý přehled silných a slabších témat, trend posledních testů a doporučení, a to souhrnně napříč všemi bateriemi i oběma módy obtížnosti.</span>
+                </div>
+              </div>
+              <div class="hero-note-item">
+                <span class="hero-note-icon" aria-hidden="true">📘</span>
+                <div class="hero-note-copy">
+                  <strong>Rozbor po otázkách a výklad učitele</strong>
+                  <span>Po testu dostaneš přehled výsledku i rozbor jednotlivých otázek, aby bylo jasné, kde šlo o nepozornost, záměnu nebo skutečnou mezeru v tématu.</span>
+                </div>
+              </div>
+              <div class="hero-note-item">
+                <span class="hero-note-icon" aria-hidden="true">💾</span>
+                <div class="hero-note-copy">
+                  <strong>Průběžné uložení postupu</strong>
+                  <span>Aplikace si v prohlížeči pamatuje rozepsanou relaci, takže se můžeš vrátit tam, kde jsi skončil(a), bez ztráty průběžné práce.</span>
+                </div>
+              </div>
+              <div class="hero-note-item">
+                <span class="hero-note-icon" aria-hidden="true">📌</span>
+                <div class="hero-note-copy">
+                  <strong>Cílené procvičování dál</strong>
+                  <span>Na základě výsledků můžeš navázat opravnou sadou nebo se vracet k tématům, která ještě nemáš dostatečně upevněná.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat-card"><div class="stat-label">Otázky v bance</div><div class="stat-value" id="statQuestions">800</div><div class="stat-sub">Souhrn všech otázek napříč základní i pokročilou vrstvou.</div></div>
+            <div class="stat-card"><div class="stat-label">Čas na test</div><div class="stat-value">30 min</div><div class="stat-sub">Stejný rámec jako u oficiálně popsaného testu UPOL SPP.</div></div>
+            <div class="stat-card"><div class="stat-label">Režimy obtížnosti</div><div class="stat-value">2</div><div class="stat-sub">V každém režimu je 8 baterií: 7 profilových a 1 finální syntetická.</div></div>
+          </div>
+        </div>
+        <aside class="panel detail-card" id="batteryDetail">
+          <div class="detail-top"><div><h3>Vyber baterii</h3><p>Po kliknutí se tady zobrazí účel, dominantní obsah, tematický rozpis a role baterie v celé bance.</p></div><span class="badge">—</span></div>
+          <div class="detail-block"><div class="detail-label">Účel</div><div class="detail-copy detail-purpose" id="detailPurpose"><p>Zatím není vybraná žádná baterie.</p></div></div>
+          <div class="detail-block"><div class="detail-label">Dominantní obsah</div><div class="chips" id="detailDominant"></div></div>
+          <div class="detail-block"><div class="detail-label">Tematický rozpis</div><ul class="compact-list" id="detailBreakdown"></ul></div>
+          <div class="detail-block"><div class="detail-label">Profil baterie</div><div class="detail-copy" id="detailProfile"></div></div>
+        </aside>
+      </div>
+
+      <!-- Config panel -->
+      <div class="config-panel" id="configPanel">
+        <h4>Jak dnes poběžím</h4>
+        <div class="config-row">
+          <div class="config-section"><div class="config-section-label">Obtížnost</div><div class="config-options" id="configDifficulty"><button class="config-opt active" data-difficulty="basic" type="button">Základní</button><button class="config-opt" data-difficulty="hard" type="button">Pokročilá</button></div><div class="config-help" id="difficultyHelp">Základní režim je výchozí. Dashboard dál agreguje výsledky napříč oběma režimy.</div></div>
+          <div class="config-section"><div class="config-section-label">Režim práce</div><div class="config-options" id="configMode"><button class="config-opt active" data-mode="simulation" type="button">Simulace testu</button><button class="config-opt" data-mode="reading-training" type="button">Trénink čtení</button><button class="config-opt" data-mode="repair" type="button" disabled id="repairModeOpt">Opravný režim</button></div></div>
+          <div class="config-section"><div class="config-section-label">Cíl</div><div class="config-options" id="configGoal"><button class="config-opt" data-goal="speed" type="button">Rychlost</button><button class="config-opt" data-goal="accuracy" type="button">Přesnost</button><button class="config-opt active" data-goal="attention" type="button">Pozornost</button></div></div>
+        </div>
+        <div class="config-checks" id="configChecks">
+          <label class="config-check"><input type="checkbox" id="optShowQuestionFirst"> zobrazit nejprve jen zadání</label>
+          <label class="config-check"><input type="checkbox" id="optHighlightKeywords"> zvýrazňovat riziková slova</label>
+          <label class="config-check"><input type="checkbox" id="optRequireConfidence"> po odpovědi vyžadovat jistotu</label>
+          <label class="config-check"><input type="checkbox" id="optAutoSave" checked> automaticky ukládat stav</label>
+          <label class="config-check"><input type="checkbox" id="optRestoreSession" checked> při návratu obnovit relaci</label>
+        </div>
+      </div>
+
+      <!-- Restore panel (conditionally populated by JS) -->
+      <div id="restorePanel" class="hidden"></div>
+
+      <!-- Battery selection -->
+      <div class="battery-select-wrap" style="margin-top:20px;">
+        <div class="section-title"><div><h3>Výběr baterie</h3><p>Vyber modul, zkontroluj jeho profil a spusť test.</p></div></div>
+        <div class="battery-grid" id="batteryGrid"></div>
+        <div class="start-actions">
+          <div class="selection-note" id="selectionNote"><strong>Vybraná baterie:</strong> zatím není zvolena žádná varianta.</div>
+          <button class="btn btn-primary" id="startTestBtn" disabled>Spustit vybranou baterii</button>
+        </div>
+      </div>
+
+      <!-- Progress and Weakness Map (NEW) -->
+      <div id="weaknessPanel" class="hidden"></div>
+      
+      <!-- History panel -->
+      <div id="historyPanel" class="hidden"></div>
+    </section>
+
+    <!-- ════ TEST SCREEN ════ -->
+    <section class="app hidden" id="testScreen">
+      <aside class="panel sidebar" id="sidebar">
+        <div class="sidebar-head">
+          <h2>Testovací panel</h2>
+          <div class="sidebar-battery" id="sidebarBatteryLabel">Aktivní baterie: —</div>
+          <div id="sidebarModeBadge"></div>
+        </div>
+        <div class="meta">
+          <div class="meta-box"><strong>Počet otázek:</strong> <span id="metaCount">50</span></div>
+          <div class="meta-box"><div><strong>Časový limit:</strong></div><div class="timer" id="timer">30:00</div></div>
+          <div class="meta-box"><strong>Zodpovězeno:</strong> <span id="answeredCount">0</span> / <span id="answeredTotal">50</span></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-box curr"></span> aktuální otázka</div>
+          <div class="legend-item"><span class="legend-box ans"></span> zodpovězená</div>
+          <div class="legend-item"><span class="legend-box flag"></span> označená</div>
+          <div class="legend-item"><span class="legend-box slow-q"></span> pomalá</div>
+          <div class="legend-item"><span class="legend-box guess-q"></span> tip</div>
+          <div class="legend-item"><span class="legend-box"></span> nezodpovězená</div>
+        </div>
+        <div class="question-grid" id="questionGrid"></div>
+        <div class="side-actions">
+          <button class="btn btn-light btn-sm" id="focusModeBtn" type="button">⊞ Režim soustředění</button>
+          <button class="btn btn-outline btn-sm" id="changeBatteryBtn" type="button">Návrat do hlavního menu</button>
+          <button class="btn btn-danger btn-sm" id="finishBtn" type="button">Vyhodnotit test</button>
+        </div>
+        <div class="warning" style="margin-top:10px; font-size:13px;">Klávesy: A–D odpověď · ←→ navigace · F označit · 1/2/3 jistota · R odkrýt odpovědi · Mezerník režim soustředění</div>
+      </aside>
+
+      <main class="panel main">
+        <section id="testPane">
+          <div class="main-header">
+            <div class="main-header-top">
+              <div>
+                <div class="small" id="questionMeta">Otázka 1 z 50</div>
+                <h3 id="questionText"></h3>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                <div class="active-battery-pill" id="activeBatteryPill">—</div>
+                <div class="focus-only-actions" style="display:none; gap:8px;">
+                  <button class="btn btn-outline btn-sm" id="fmChangeBatteryBtn" type="button">Ukončit baterii</button>
+                  <button class="btn btn-light btn-sm" id="fmExitFocusBtn" type="button">⊟ Zrušit soustředění</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="question-body">
+            <div id="revealWrap" class="hidden">
+              <div class="reveal-wrap"><button class="btn btn-primary" id="revealOptionsBtn" type="button">Rozumím zadání, zobrazit odpovědi</button></div>
+            </div>
+            <div class="options" id="optionsWrap"></div>
+          </div>
+          <div id="confidenceWrap" class="hidden"></div>
+          <div class="quick-actions" id="quickActionsWrap"></div>
+          <div class="note-wrap" id="noteWrap" style="display:none;">
+            <textarea class="note-input" id="noteInput" placeholder="Poznámka k otázce (nepovinné)…" rows="1"></textarea>
+          </div>
+          <div class="nav">
+            <button class="btn btn-light" id="prevBtn">← Předchozí otázka</button>
+            <button class="btn btn-primary" id="nextBtn">Další otázka →</button>
+          </div>
+        </section>
+
+        <section id="resultsPane" class="results hidden">
+          <div class="score-box">
+            <div class="score-main" id="scoreMain"></div>
+            <div class="score-sub" id="scoreSub"></div>
+            <div class="results-battery" id="resultsBatteryLabel"></div>
+          </div>
+          <div id="performanceSummary"></div>
+          <div id="attentionDashboard"></div>
+          <div id="thematicWeaknesses"></div>
+          <div id="recommendationsPanel"></div>
+          <div id="repairPanel" class="hidden"></div>
+          <div class="result-actions" id="resultActions">
+            <button class="btn btn-light" id="showReviewBtn">Zobrazit rozbor</button>
+            <button class="btn btn-primary hidden" id="hideReviewBtn">Skrýt rozbor</button>
+            <button class="btn btn-purple" id="repairBtn">Spustit opravný režim</button>
+            <button class="btn btn-light" id="restartBtn">Restartovat baterii</button>
+            <button class="btn btn-outline" id="backToSelectionBtn">Zpět na výběr</button>
+            <button class="btn btn-outline btn-sm" id="clearSessionBtn">Vymazat uloženou relaci</button>
+          </div>
+          <div id="reviewWrap" class="hidden"></div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  
+</body>
+</html>
