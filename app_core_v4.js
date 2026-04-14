@@ -49,6 +49,15 @@
   };
 
 
+  function resolveUiErrorLabel(code) {
+    const raw = String(code || "").trim();
+    if (!raw) return "";
+    if (analyticsBridge.getErrorLabel) return analyticsBridge.getErrorLabel(raw);
+    return ERROR_LABELS[raw] || ERROR_LABELS[raw.toLowerCase()] || raw;
+  }
+
+
+
 
 // ═══════════════════════════════════════════
 // 2. DATA NORMALIZATION (BASE + HARD)
@@ -72,6 +81,16 @@ function loadBattery8MetadataMap(mode = "basic") {
     ? (window.battery8MapHard || { schemaVersion: 0, items: [] })
     : (window.battery8Map || { schemaVersion: 0, items: [] });
 }
+function sanitizeTutorExplanationText(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^správně je\s+(?:možnost\s+)?[ABCD]\s*,?\s*protože\s*/i, "")
+    .replace(/^správná odpověď je\s+(?:možnost\s+)?[ABCD]\s*,?\s*protože\s*/i, "")
+    .replace(/^správně je\s+(?:možnost\s+)?[ABCD]\s*[–\-:]\s*/i, "")
+    .trim();
+}
+
 function normalizeMetadataItem(item) {
   const base = item && typeof item === "object" ? item : {};
   return {
@@ -96,7 +115,7 @@ function normalizeMetadataItem(item) {
     attentionRisk: String(base.attentionRisk || "medium").trim(),
     formulationFlags: Array.isArray(base.formulationFlags) ? base.formulationFlags.map(String) : [],
     questionCore: String(base.questionCore || "").trim(),
-    explanationCorrect: String(base.explanationCorrect || "").trim(),
+    explanationCorrect: sanitizeTutorExplanationText(base.explanationCorrect || ""),
     explanationDistractor: String(base.explanationDistractor || "").trim(),
     commonMisconception: String(base.commonMisconception || "").trim(),
     whyWrongCategory: String(base.whyWrongCategory || "").trim(),
@@ -353,16 +372,26 @@ function formatDifficultyBadgeText(mode) { return `obtížnost: ${getDifficultyM
   };
 
 
+
+const BATTERY_DETAIL_COPY_HARD = {
+  1:{purposeText:"Baterie ověřuje funkční čtení obtíže a schopnost určit primární bariéru.",profileParagraphs:["Rozhoduje, zda odlišíš přístup k informaci od porozumění, formu výkonu od kompetence a hlavní bariéru od nápadného sekundárního projevu.","Silná odpověď se neopírá o diagnózu samu, ale o funkční dopad a podmínky, ve kterých výkon selhává nebo naopak funguje."]},
+  2:{purposeText:"Baterie cílí na přesné rozlišení blízkých odborných rámců.",profileParagraphs:["Úspěch stojí na tom, že určíš, který obor nebo rámec nejlépe vysvětluje jádro potíže, ne který znak je nejviditelnější.","Plete se tu hlavně disciplína, role prostředí a povrchově podobný projev."]},
+  3:{purposeText:"Baterie prověřuje volbu podpory, metody práce a intervenční logiku.",profileParagraphs:["Rozlišuje se mezi reedukací, kompenzací, zpřístupněním, AAK a jinými podpůrnými postupy.","Nejde o to vybrat nejsympatičtější řešení, ale odborně nejpřesnější postup pro danou funkční potřebu."]},
+  4:{purposeText:"Baterie sleduje komunikaci jako profesní kompetenci speciálního pedagoga.",profileParagraphs:["Důležité je aktivní naslouchání, srozumitelnost sdělení, práce s AAK, komunikace s rodinou i týmem a respekt k profesním hranicím.","Správná odpověď nebývá ta nejměkčí, ale ta, která je současně citlivá, přesná a proveditelná."]},
+  5:{purposeText:"Baterie míří na školský systém, podpůrná opatření a práci s dokumenty.",profileParagraphs:["Rozhoduje orientace v tom, kdo co ve škole a ve školských poradenských zařízeních navrhuje, vytváří, realizuje a vyhodnocuje.","Silně je zastoupena procesní logika PO1, PLPP, IVP a hranice mezi školou, ŠPP a ŠPZ."]},
+  6:{purposeText:"Baterie rozšiřuje přípravu o sociální a zdravotní přesah.",profileParagraphs:["Položky rozlišují dávky, průkazy OZP, sociální služby, OSPOD a hranice mezi školstvím, sociální oblastí a zdravotnictvím.","Častou chybou bývá záměna podobně znějících nároků nebo služeb s odlišným účelem."]},
+  7:{purposeText:"Baterie prověřuje poradenský úsudek, etiku a kvalitu procesu.",profileParagraphs:["Těžiště je ve vyjasnění zakázky, interpretaci dat bez redukce na nálepku, respektu ke kompetencím a převodu závěru do podpory.","Silná odpověď drží poradenskou logiku od prvního kontaktu až po vyhodnocení účinku podpory."]},
+  8:{purposeText:"Finální baterie slouží jako nejtvrdší syntetická simulace přijímacího testu.",profileParagraphs:["Soustreďuje krátké rozlišovací položky z pojmů, institucí, dokumentů, psychologie, historie oboru i sociálně-legislativní orientace.","Rozhoduje přesnost, stabilní terminologie a schopnost nenechat se stáhnout distraktorem k blízké, ale nepřesné možnosti."]}
+};
+
 function getBatteryDetailCopy(battery) {
   if (!battery) return null;
   const baseCopy = BATTERY_DETAIL_COPY[battery.id] || {};
   if ((battery.datasetKey || getActiveDifficultyMode()) !== "hard") return baseCopy;
+  const hardCopy = BATTERY_DETAIL_COPY_HARD[battery.id] || {};
   return {
-    purposeText: battery.purpose || baseCopy.purposeText || "",
-    profileParagraphs: [
-      "Toto je pokročilá paralelní vrstva stejné tematické oblasti. Počítá s vyšší potřebou diferenciace, syntézy a procesního rozhodování.",
-      "Dashboard dál agreguje výsledky napříč základním i pokročilým režimem, ale výběr baterie a samotný běh čerpají jen z právě zvolené vrstvy."
-    ]
+    purposeText: battery.purpose || hardCopy.purposeText || baseCopy.purposeText || "",
+    profileParagraphs: hardCopy.profileParagraphs || baseCopy.profileParagraphs || []
   };
 }
 function updateSelectionState() {
@@ -1392,7 +1421,6 @@ function runDashboardPracticeAction(kind, value) {
             <div>
               <h4>Studijní dashboard</h4>
               <p class="dashboard-headline">${summary.source === "history-only" ? "Souhrn je obnovený hlavně z historie pokusů. Detailní tematická mapa se doplní po dalších dokončených relacích." : "Dlouhodobý přehled napříč dokončenými testy. Ukazuje, co máš už zvládnuté, co potřebuje posílit a co zatím ještě není dost ověřené. Na značku ? můžeš najet myší pro vysvětlení."}</p>
-            <div class="dashboard-legend-note">Na značku ? můžeš najet myší a zobrazí se vysvětlivka.</div>
             </div>
             <div class="dashboard-meta">
               ${renderDashboardTrendBadge(`Vývoj: ${formatDashboardTrendLabel(trendDirection, "short")}`, trendDirection, getDashboardTrendDescription(trendDirection))}
@@ -1619,7 +1647,7 @@ function renderConfigPanel() {
   const difficultyHelp = $("difficultyHelp");
   if (difficultyHelp) {
     const activeDataset = getActiveDataset();
-    difficultyHelp.textContent = `${getDifficultyModeLabel(activeDataset.key)} režim právě zobrazuje ${activeDataset.batteries.length} baterií. Dashboard dál agreguje výsledky napříč základním i pokročilým režimem.`;
+    difficultyHelp.textContent = `${getDifficultyModeLabel(activeDataset.key)} režim právě nabízí ${activeDataset.batteries.length} baterií v této úrovni obtížnosti.`;
   }
 }
 
@@ -1871,7 +1899,7 @@ function updateMeta() {
       .filter(x => x.rate < 80)
       .sort((a,b) => a.rate - b.rate);
     const errs = Object.keys(errorTypes)
-      .map(k => ({ type: k, count: errorTypes[k], label: ERROR_LABELS[k] || k }))
+      .map(k => ({ type: k, count: errorTypes[k], label: resolveUiErrorLabel(k) || k }))
       .sort((a,b) => b.count - a.count);
     if (subs.length === 0 && errs.length === 0) {
       el.innerHTML = `<div class="dashboard"><h4>Tematická mapa (z tohoto testu)</h4><div class="dash-detail" style="border-color:#bfe2ca; background:#edf9f1; color:#1c6f44;">V tomto testu nemáte žádné výrazné slabiny. Cíle bylo dosaženo!</div></div>`;
@@ -1977,7 +2005,8 @@ function updateMeta() {
     if (m.signalHint) tabTutor += `<div class="review-explanation" style="margin-bottom:10px;"><strong>Signální slovo:</strong> <span style="color:#d4820a; font-weight:700;">${escapeHtml(m.signalHint)}</span></div>`;
     
     // Why Correct / Why Distractor
-    if (m.explanationCorrect) tabTutor += `<div class="review-explanation" style="margin-bottom:10px;"><strong>Proč je ${LETTERS[q.correct]} správně:</strong> ${escapeHtml(m.explanationCorrect)}</div>`;
+    const tutorExplanationCorrect = sanitizeTutorExplanationText(m.explanationCorrect || "");
+    if (tutorExplanationCorrect) tabTutor += `<div class="review-explanation" style="margin-bottom:10px;"><strong>Proč je ${LETTERS[q.correct]} správně:</strong> ${escapeHtml(tutorExplanationCorrect)}</div>`;
     if (m.explanationDistractor && !isCorrect && !isUnanswered) {
       tabTutor += `<div class="review-explanation" style="margin-bottom:10px; border-color:#f3c9c9;"><strong>Lákavý distraktor:</strong> ${escapeHtml(m.explanationDistractor)}</div>`;
     }
@@ -1988,7 +2017,7 @@ function updateMeta() {
 
     // Diagnostic Diagnosis
     if (!isCorrect && !isUnanswered) {
-      const autoErr = qs.autoErrorType ? ERROR_LABELS[qs.autoErrorType] : "nezjištěno";
+      const autoErr = qs.autoErrorType ? (resolveUiErrorLabel(qs.autoErrorType) || "nezjištěno") : "nezjištěno";
       tabTutor += `<div class="review-explanation" style="background:#fffcf5; border-style:dashed;">`;
       tabTutor += `<strong>Diagnostika trenažéru:</strong> Pravděpodobný důvod chyby: <em>${autoErr}</em>`;
       tabTutor += `<div style="margin-top:8px;"><strong>Manuální oprava:</strong> <select class="error-type-select" data-qi="${qIndex}">${Object.entries(ERROR_LABELS).map(([k, v]) => `<option value="${k}" ${(qs.manualErrorType || qs.autoErrorType) === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>`;
@@ -2225,15 +2254,22 @@ function backToSelection() {
     applyFocusMode();
     if(appState.settings.autoSave) saveCurrentSession();
   }
-  let reviewRendered=false;
+  
+let reviewRendered=false;
   function showReview() {
-    if(!reviewRendered){renderReview();reviewRendered=true;}
+    if (typeof window.renderReview === "function") {
+      window.renderReview();
+      reviewRendered = true;
+    } else if (!reviewRendered) {
+      renderReview();
+      reviewRendered = true;
+    }
     $("reviewWrap").classList.remove("hidden");
     $("showReviewBtn").classList.add("hidden");
     $("hideReviewBtn").classList.remove("hidden");
     if(appState.currentSession){appState.currentSession.ui.reviewVisible=true;saveCurrentSession();}
   }
-  function hideReview() {
+function hideReview() {
     $("reviewWrap").classList.add("hidden");
     $("showReviewBtn").classList.remove("hidden");
     $("hideReviewBtn").classList.add("hidden");
